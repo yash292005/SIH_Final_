@@ -13,7 +13,8 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-Open http://127.0.0.1:8000/
+Open running on local host not deployed yet
+
 
 Search any city, e.g. Kolkata, Delhi, Mumbai, London.
 
