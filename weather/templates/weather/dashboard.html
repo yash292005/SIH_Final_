@@ -1,0 +1,99 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyGuard Weather</title>
+    <link rel="stylesheet" href="{% static 'weather/css/style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-shell">
+    <header class="topbar">
+        <a class="brand" href="/">
+            <span class="brand-mark">☁</span>
+            <span>SkyGuard</span>
+        </a>
+        <form class="search" method="get" action="/">
+            <span>⌕</span>
+            <input name="city" value="{{ searched_city }}" placeholder="Search city..." autocomplete="off">
+            <button type="submit">Search</button>
+        </form>
+        <div class="live"><span></span> Live forecast</div>
+    </header>
+
+    {% if error %}
+        <div class="error">Could not load weather: {{ error }}</div>
+    {% elif data %}
+    <main>
+        <section class="hero-grid">
+            <div class="hero card">
+                <div>
+                    <div class="eyebrow">CURRENT CONDITIONS</div>
+                    <h1>{{ data.location.name }}</h1>
+                    <p class="muted">{{ data.location.admin1 }}{% if data.location.admin1 %}, {% endif %}{{ data.location.country }}</p>
+                    <div class="temperature">{{ data.current.temperature }}<sup>°C</sup></div>
+                    <div class="condition">{{ data.current.icon }} {{ data.current.description }}</div>
+                    <p class="muted">Feels like {{ data.current.feels_like }}°C</p>
+                </div>
+                <div class="hero-side">
+                    <div class="mini"><span>💧</span><div><b>{{ data.current.humidity }}%</b><small>Humidity</small></div></div>
+                    <div class="mini"><span>💨</span><div><b>{{ data.current.wind }} km/h</b><small>Wind</small></div></div>
+                    <div class="mini"><span>⏲</span><div><b>{{ data.current.pressure }} hPa</b><small>Pressure</small></div></div>
+                </div>
+            </div>
+
+            <div class="risk card {{ data.flood.css }}">
+                <div class="eyebrow">FLOOD RISK · ESTIMATE</div>
+                <div class="risk-top">
+                    <div>
+                        <h2>{{ data.flood.level }}</h2>
+                        <p>Risk score <strong>{{ data.flood.score }}/100</strong></p>
+                    </div>
+                    <div class="risk-ring"><span>{{ data.flood.score }}</span></div>
+                </div>
+                <div class="risk-bar"><i style="width: {{ data.flood.score }}%"></i></div>
+                <div class="risk-metrics">
+                    <div><small>Rain today</small><strong>{{ data.flood.rain_mm }} mm</strong></div>
+                    <div><small>Rain chance</small><strong>{{ data.flood.rain_probability }}%</strong></div>
+                    <div><small>River discharge</small><strong>{{ data.flood.river_discharge }} m³/s</strong></div>
+                </div>
+                <ul class="reasons">
+                    {% for reason in data.flood.reasons %}<li>{{ reason }}</li>{% endfor %}
+                </ul>
+            </div>
+        </section>
+
+        <section class="section-heading"><div><span class="eyebrow">NEXT 24 HOURS</span><h2>Rain & temperature</h2></div></section>
+        <section class="card chart-card">
+            <canvas id="weatherChart"></canvas>
+        </section>
+
+        <section class="section-heading"><div><span class="eyebrow">7-DAY OUTLOOK</span><h2>Forecast</h2></div></section>
+        <section class="forecast-grid">
+            {% for day in data.daily %}
+            <article class="forecast card {% if forloop.first %}today{% endif %}">
+                <div class="day">{% if forloop.first %}Today{% else %}{{ day.label }}{% endif %}</div>
+                <div class="day-icon">{{ day.icon }}</div>
+                <div class="desc">{{ day.description }}</div>
+                <div class="temps"><b>{{ day.max }}°</b><span>{{ day.min }}°</span></div>
+                <div class="rain-pill">🌧 {{ day.probability }}%</div>
+                <div class="rain-mm">{{ day.rain }} mm rain</div>
+            </article>
+            {% endfor %}
+        </section>
+    </main>
+    {% endif %}
+
+    <footer>Weather data: Open-Meteo · Flood data: GloFAS via Open-Meteo</footer>
+</div>
+
+{% if data %}
+<script>
+window.WEATHER_DATA = {{ data.hourly|safe }};
+</script>
+<script src="{% static 'weather/js/dashboard.js' %}"></script>
+{% endif %}
+</body>
+</html>
